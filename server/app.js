@@ -13,41 +13,28 @@ server.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
 });
 
-
-
 const io = require("socket.io")(server, {
 	pingTimeout: 60000,
 	cors: {
-		origin: [
-			"http://localhost:5173",
-			"http://127.0.0.1:5173",
-		],
+		origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
 	},
 });
 
-const logFilePath = './server/logs/website.log';
+const logFilePath = "./server/logs/website.log";
 
 io.on("connection", (socket) => {
 	console.log("connected to socket.io");
-	socket.on("setup", (userData) => {
+	socket.on("setup", () => {
 		socket.emit("connected");
-  });
-
-    const tailStream = new tail.Tail(logFilePath, {
-			fromBeginning: false,
-			nLines: 10,
-		});
-
-
-  tailStream.on("line", (data) => {
-		socket.emit("log", data);
 	});
 
-	// Listen for new lines in the log file
+	const tailStream = new tail.Tail(logFilePath, {
+		fromBeginning: false,
+		nLines: 10,
+	});
+
 	tailStream.on("error", console.error);
 	tailStream.on("line", (data) => {
 		socket.emit("log", data);
 	});
-  
-  
 });

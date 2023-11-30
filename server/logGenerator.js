@@ -8,7 +8,7 @@ function getRandomNumber() {
 
 function appendRandomNumberToLog() {
 	const randomNumber = getRandomNumber();
-	const logMessage = `Log entry: ${randomNumber}\n`;
+	const logMessage = `\n Log entry: ${randomNumber}\n`;
 
 	fs.appendFile(logFilePath, logMessage, (err) => {
 		if (err) {
