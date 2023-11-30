@@ -3,36 +3,51 @@ const http = require("http");
 const fs = require("fs");
 const tail = require("tail");
 const { Server } = require("socket.io");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
-const io = new Server(server);
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+	console.log(`Server running on port ${PORT}`);
+});
 
-const logFilePath = "./logs/website.log";
+
+
+const io = require("socket.io")(server, {
+	pingTimeout: 60000,
+	cors: {
+		origin: [
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+		],
+	},
+});
+
+const logFilePath = './server/logs/website.log';
 
 io.on("connection", (socket) => {
-	const tailStream = new tail.Tail(logFilePath, {
-		fromBeginning: false,
-		nLines: 10,
-	});
+	console.log("connected to socket.io");
+	socket.on("setup", (userData) => {
+		socket.emit("connected");
+  });
 
-	tailStream.on("line", (data) => {
+    const tailStream = new tail.Tail(logFilePath, {
+			fromBeginning: false,
+			nLines: 10,
+		});
+
+
+  tailStream.on("line", (data) => {
 		socket.emit("log", data);
 	});
 
+	// Listen for new lines in the log file
 	tailStream.on("error", console.error);
 	tailStream.on("line", (data) => {
 		socket.emit("log", data);
 	});
-});
-
-// app.use(express.static("../client/build"));
-
-// app.get("/", (req, res) => {
-// 	res.sendFile("index.html", { root: "../client/build" });
-// });
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`);
+  
+  
 });
